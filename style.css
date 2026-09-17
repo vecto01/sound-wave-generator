@@ -1,27 +1,34 @@
 :root {
-    --bg-color: #1a1a1a;
-    --text-color: #f0f0f0;
+    --bg-color: #121212;
+    --text-color: #ffffff;
     --canvas-bg: #0a0a0a;
     --primary-color: #4a90e2;
     --secondary-color: #50e3c2;
-    --control-bg: #2a2a2a;
-    --control-border: #444;
+    --control-bg: #252525;
+    --control-border: #333;
     --button-bg: #4a90e2;
     --button-hover: #3a7bc8;
+    --button-active: #2a6fc9;
     --loader-color: #50e3c2;
     --transition-speed: 0.3s;
+    --focus-color: #50e3c2;
+    --label-color: #cccccc;
+    --text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
-    --bg-color: #f5f5f5;
-    --text-color: #333;
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
     --canvas-bg: #ffffff;
-    --primary-color: #2a6fc9;
-    --secondary-color: #4ecdc4;
+    --primary-color: #4a90e2;
+    --secondary-color: #50e3c2;
     --control-bg: #ffffff;
-    --control-border: #ddd;
-    --button-bg: #2a6fc9;
-    --button-hover: #1a5a9a;
+    --control-border: #dee2e6;
+    --button-bg: #4a90e2;
+    --button-hover: #3a7bc8;
+    --button-active: #2a6fc9;
+    --label-color: #495057;
+    --text-shadow: none;
 }
 
 * {
@@ -51,8 +58,11 @@ header {
 }
 
 header h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin-bottom: 0;
+    color: var(--text-color);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 700;
 }
 
 .wave-visualizer {
@@ -61,14 +71,64 @@ header h1 {
     padding: 20px;
     margin-bottom: 30px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
 }
 
-#waveCanvas {
+#waveCanvas.main-wave {
     width: 100%;
     height: 300px;
     background-color: var(--canvas-bg);
+    display: none;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0.9;
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#waveCanvas.loading-wave {
+    width: 100%;
+    height: 200px;
+    background-color: transparent;
     display: block;
     margin: 0 auto;
+    border-radius: 8px;
+    opacity: 0.7;
+    position: relative;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Эффект пульсации волны при изменении параметров */
+#waveCanvas.wave-pulse {
+    animation: pulseWave 1s ease-out;
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+}
+
+@keyframes pulseWave {
+    0% { box-shadow: 0 0 0 rgba(74, 144, 226, 0); }
+    50% { box-shadow: 0 0 20px rgba(74, 144, 226, 0.7); }
+    100% { box-shadow: 0 0 0 rgba(74, 144, 226, 0); }
+}
+
+/* Улучшение микровзаимодействий для кнопок */
+button.pulse-on-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button.pulse-on-hover:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+button.pulse-on-hover:active {
+    transform: scale(0.98);
 }
 
 .controls {
@@ -95,6 +155,16 @@ label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
+    color: var(--text-color);
+}
+
+.control-group span {
+    display: block;
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 4px;
+    color: var(--text-color);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 input[type="range"] {
@@ -102,27 +172,88 @@ input[type="range"] {
     height: 10px;
     margin-bottom: 8px;
     -webkit-appearance: none;
-    background: var(--control-bg);
+    background: linear-gradient(to right, var(--control-bg) 0%, var(--primary-color) 0%, var(--primary-color) 100%);
+    background-size: 200% 100%;
     border-radius: 5px;
-    transition: transform var(--transition-speed) ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    touch-action: manipulation;
+    cursor: pointer;
+}
+
+input[type="number"].number-input {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 8px;
+    border: 1px solid var(--control-border);
+    border-radius: 4px;
+    background-color: var(--control-bg);
+    color: var(--text-color);
+    transition: all 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="number"].number-input:focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.2);
+}
+
+input[type="range"]:hover {
+    opacity: 0.9;
+}
+
+input[type="range"]:focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.5);
+    border-radius: 5px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--control-bg) 0%, var(--primary-color) 0%, var(--primary-color) 100%);
+    background-size: 200% 100%;
+    border-radius: 5px;
+    transition: background-position 0.3s ease, opacity 0.2s ease;
+}
+
+input[type="range"]:active::-webkit-slider-runnable-track {
+    background-position: 100% 0%;
+    opacity: 0.8;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--primary-color);
+    width: 24px;
+    height: 24px;
+    background: var(--secondary-color);
     border-radius: 50%;
     cursor: pointer;
-    transition: transform var(--transition-speed) ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 0 0 2px var(--control-bg), 0 0 0 4px var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: color-mix(in srgb, var(--secondary-color), black 20%);
+    transform: scale(1.1);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(0.9);
+    background-color: var(--primary-color);
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     background: var(--primary-color);
     border-radius: 50%;
     cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.1);
 }
 
 #waveType {
@@ -132,6 +263,14 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 4px;
     background-color: var(--control-bg);
     color: var(--text-color);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s ease;
+}
+
+#waveType:focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+    transform: scale(1.02);
 }
 
 .audio-controls {
@@ -139,38 +278,96 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: column;
     gap: 10px;
     grid-column: 1 / -1;
+    align-items: center;
+    margin-top: 20px;
 }
 
 button {
     background-color: var(--button-bg);
     color: white;
     border: none;
-    padding: 12px;
+    padding: 12px 20px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.2s;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 300px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 button:hover {
     background-color: var(--button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-#theme-toggle {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--text-color);
+button:focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.5);
+    transform: translateY(-2px);
+    border: 1px solid var(--primary-color);
 }
 
-@media (max-width: 768px) {
-    .controls {
-        grid-template-columns: 1fr;
-    }
+button:active {
+    transform: translateY(0);
+    background-color: var(--button-active);
 }
 
-/* Лоудер */
+button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.2s ease;
+}
+
+button:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+.moon-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    animation: pulse 2s infinite, spin 3s linear infinite;
+    z-index: 100;
+    color: var(--loader-color);
+    font-size: 2.5rem;
+    text-shadow: 0 0 10px rgba(80, 227, 194, 0.5);
+}
+
+@keyframes pulse {
+    0% { filter: drop-shadow(0 0 0px rgba(80, 227, 194, 0.7)); }
+    50% { filter: drop-shadow(0 0 20px rgba(80, 227, 194, 0.9)); }
+    100% { filter: drop-shadow(0 0 0px rgba(80, 227, 194, 0.7)); }
+}
+
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes wavePulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.7; }
+}
+
 .loader {
     position: absolute;
     top: 50%;
@@ -183,30 +380,315 @@ button:hover {
     border-top-color: var(--loader-color);
     animation: spin 1s ease-in-out infinite;
     z-index: 100;
+    margin-top: -20px;
 }
 
-@keyframes spin {
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+@keyframes progress-fill {
+    from { width: 0%; }
+    to { width: 100%; }
 }
 
-/* Анимация волны */
-.wave-visualizer {
+.progress-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 4px;
+    animation: progress-fill 1.5s ease-in forwards;
+}
+
+.loader-container {
     position: relative;
-    transition: opacity var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    padding: 20px;
 }
 
-/* Адаптивность */
-@media (max-width: 1024px) {
-    .controls {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
+.loader-text {
+    margin-top: 15px;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    text-align: center;
+    opacity: 1;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Адаптивность слайдеров и текста */
+@media (max-width: 768px) {
+    .control-group span {
+        font-size: 0.9rem;
+        color: var(--label-color);
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    input[type="range"] {
+        height: 15px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
     }
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-color: #1a1a1a;
-        --text-color: #f0f0f0;
-        --canvas-bg: #0a0a0a;
+@media (max-width: 768px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .moon-icon {
+        font-size: 2rem !important;
+        margin-bottom: 10px !important;
+    }
+
+    .loader {
+        width: 40px !important;
+        height: 40px !important;
+        margin-top: -15px !important;
+    }
+}
+
+/* Планшеты (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .controls {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .control-group span {
+        font-size: 1rem;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    input[type="range"] {
+        height: 12px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+    }
+
+    .moon-icon {
+        font-size: 2.5rem !important;
+    }
+
+    .loader {
+        width: 50px !important;
+        height: 50px !important;
+        margin-top: -20px !important;
+    }
+}
+
+/* Лэптопы (1025px - 1200px) */
+@media (min-width: 1025px) and (max-width: 1200px) {
+    .controls {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .moon-icon {
+        font-size: 3rem !important;
+    }
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.loader-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    opacity: 1 !important;
+    pointer-events: all;
+}
+
+.loader-text {
+    margin-top: 15px;
+    color: var(--text-color);
+    font-size: 1rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.loader-container.active .loader-text {
+    opacity: 1;
+}
+
+/* На мобильных устройствах скрываем слайдеры и показываем числовые инпуты */
+
+/* На мобильных устройствах скрываем слайдеры и показываем числовые инпуты */
+@media (max-width: 768px) {
+    input[type="range"] {
+        display: none !important;
+    }
+
+    input[type="number"].number-input {
+        display: block !important;
+        margin-bottom: 12px !important;
+    }
+}
+
+/* Новые стили */
+.slider-trail {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(74, 144, 226, 0.3), rgba(80, 227, 194, 0.1));
+    border-radius: 5px;
+    z-index: 1;
+    transform: scaleX(0);
+    transition: transform 0.1s ease;
+}
+
+input[type="range"] {
+    position: relative;
+    z-index: 2;
+}
+
+input[type="range"]:active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(74, 144, 226, 0.3), rgba(80, 227, 194, 0.1));
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 0;
+    transform: scaleX(1);
+    transition: transform 0.1s ease;
+}
+
+
+.success-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background-color: rgba(0, 0, 0, 0.95);
+    color: var(--text-color);
+    padding: 20px 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    animation: fadeIn 0.5s ease forwards;
+    border: 1px solid var(--secondary-color);
+    transition: all 0.3s ease;
+    max-width: 90%;
+    min-width: 280px;
+    margin: 0 auto;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+    .success-message {
+        width: 95%;
+        padding: 15px 20px;
+        font-size: 1rem;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+        visibility: hidden;
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+        visibility: visible;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+        visibility: visible;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+        visibility: hidden;
+    }
+}
+
+.success-message button {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.success-message button:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-2px);
+}
+
+/* Анимация появления элементов */
+.wave-visualizer, .controls, .audio-controls {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.wave-visualizer.visible, .controls.visible, .audio-controls.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Улучшение адаптивности кнопок */
+@media (max-width: 768px) {
+    button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
     }
 }

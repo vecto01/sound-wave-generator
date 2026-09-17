@@ -33,13 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Функция для показа/скрытия лоудера
     function showLoader() {
-        loader.style.opacity = '1';
-        waveCanvas.style.opacity = '0.3';
+        const loaderContainer = document.querySelector('.loader-container');
+        if (loaderContainer) {
+            loaderContainer.classList.add('active');
+            waveCanvas.style.opacity = '0.3';
+        }
     }
     
     function hideLoader() {
-        loader.style.opacity = '0';
-        waveCanvas.style.opacity = '1';
+        const loaderContainer = document.querySelector('.loader-container');
+        if (loaderContainer) {
+            loaderContainer.classList.remove('active');
+            waveCanvas.style.opacity = '1';
+        }
     }
     
     // Настройка Canvas
@@ -51,6 +57,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Рисуем волну
     // Рисуем волну с анимацией
+    // Переменные для анимации волны
+    let animationProgress = 0;
+    let isAnimating = false;
+    
+    // Функция для анимации волны с использованием requestAnimationFrame
+    function animateWave() {
+        if (animationProgress < 1) {
+            animationProgress += 0.02;
+            drawWaveFrame();
+            requestAnimationFrame(animateWave);
+        } else {
+            isAnimating = false;
+        }
+    }
+    
+    // Основная функция рисования волны
     function drawWave() {
         ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
         ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
@@ -59,9 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const centerY = waveCanvas.height / 2;
         const samples = 100;
-        
-        // Анимация появления волны
-        const animationProgress = Math.min(1, Date.now() * 0.002);
         
         for (let i = 0; i <= samples; i++) {
             const x = (waveCanvas.width / samples) * i;
@@ -99,15 +118,53 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
         
         // Обратная связь при изменении параметров
+        
+        // Функция для рисования загрузочной волны
+        function drawLoadingWave(canvas) {
+            const ctx = canvas.getContext('2d');
+            const centerY = canvas.height / 2;
+            const samples = 100;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color');
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i <= samples; i++) {
+                const x = (canvas.width / samples) * i;
+                const progress = (i / samples) * 2 * Math.PI;
+                const value = Math.sin(progress) * 0.3;
+                const y = centerY + value * (canvas.height * 0.3);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+        }
         if (!isLoading) {
-            frequencySlider.style.transform = 'scale(1.05)';
-            amplitudeSlider.style.transform = 'scale(1.05)';
-            phaseSlider.style.transform = 'scale(1.05)';
+            // Пульсация волны
+            waveCanvas.classList.add('wave-pulse');
             setTimeout(() => {
-                frequencySlider.style.transform = 'scale(1)';
-                amplitudeSlider.style.transform = 'scale(1)';
-                phaseSlider.style.transform = 'scale(1)';
-            }, 100);
+                waveCanvas.classList.remove('wave-pulse');
+            }, 1000);
+        }
+    }
+    
+    // Функция для рисования одного кадра анимации
+    function drawWaveFrame() {
+        drawWave();
+    }
+    
+    // Функция для запуска анимации волны
+    function startWaveAnimation() {
+        if (!isAnimating) {
+            animationProgress = 0;
+            isAnimating = true;
+            requestAnimationFrame(animateWave);
         }
     }
     
@@ -117,6 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
         amplitudeValue.textContent = amplitude;
         phaseValue.textContent = phase;
         drawWave();
+        if (!isAnimating) {
+            startWaveAnimation(); // Запускаем анимацию волны при изменении параметров
+        }
     }
     
     // Управление лоудером
@@ -125,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             hideLoader();
             isLoading = false;
-            drawWave();
+            startWaveAnimation(); // Запускаем анимацию волны
         }, 1500); // Симуляция загрузки
     }
     
@@ -184,9 +244,40 @@ document.addEventListener('DOMContentLoaded', () => {
             waveType = e.target.value;
             updateParameters();
         });
+        // Синхронизация слайдеров и числовых инпутов
+        const frequencyNumber = document.getElementById('frequencyNumber');
+        const amplitudeNumber = document.getElementById('amplitudeNumber');
+        const phaseNumber = document.getElementById('phaseNumber');
         
+        // Обновление слайдера при изменении числового инпута
+        frequencyNumber.addEventListener('input', (e) => {
+            frequency = parseFloat(e.target.value);
+            frequencySlider.value = frequency;
+            updateParameters();
+            if (isPlaying) {
+                oscillator.frequency.value = frequency;
+            }
+        });
+        
+        amplitudeNumber.addEventListener('input', (e) => {
+            amplitude = parseFloat(e.target.value);
+            amplitudeSlider.value = amplitude;
+            updateParameters();
+            if (isPlaying) {
+                gainNode.gain.value = amplitude;
+            }
+        });
+        
+        phaseNumber.addEventListener('input', (e) => {
+            phase = parseFloat(e.target.value);
+            phaseSlider.value = phase;
+            updateParameters();
+        });
+        
+        // Обновление числового инпута при изменении слайдера
         frequencySlider.addEventListener('input', (e) => {
             frequency = parseFloat(e.target.value);
+            frequencyNumber.value = frequency;
             updateParameters();
             if (isPlaying) {
                 oscillator.frequency.value = frequency;
@@ -195,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         amplitudeSlider.addEventListener('input', (e) => {
             amplitude = parseFloat(e.target.value);
+            amplitudeNumber.value = amplitude;
             updateParameters();
             if (isPlaying) {
                 gainNode.gain.value = amplitude;
@@ -203,8 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         phaseSlider.addEventListener('input', (e) => {
             phase = parseFloat(e.target.value);
+            phaseNumber.value = phase;
             updateParameters();
         });
+
+        // Добавление градиентного следа при движении слайдеров
+        function addSliderTrail(slider) {
+            slider.addEventListener('mousedown', () => {
+                slider.classList.add('active-slider');
+            });
+            
+            slider.addEventListener('mouseup', () => {
+                slider.classList.remove('active-slider');
+            });
+            
+            slider.addEventListener('mouseleave', () => {
+                slider.classList.remove('active-slider');
+            });
+        }
+        
+        // Применяем эффект ко всем слайдерам
+        addSliderTrail(frequencySlider);
+        addSliderTrail(amplitudeSlider);
+        addSliderTrail(phaseSlider);
         
         playPauseButton.addEventListener('click', () => {
             if (isPlaying) {
@@ -216,11 +329,130 @@ document.addEventListener('DOMContentLoaded', () => {
         
         themeToggle.addEventListener('click', toggleTheme);
         
+        // Добавление эффекта пульсации для кнопок
+        playPauseButton.classList.add('pulse-on-hover');
+        exportAudioButton.classList.add('pulse-on-hover');
+        exportImageButton.classList.add('pulse-on-hover');
+        
         // Ресайз Canvas
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+        
+        // Добавление эффекта пульсации для кнопок
+        playPauseButton.classList.add('pulse-on-hover');
+        exportAudioButton.classList.add('pulse-on-hover');
+        exportImageButton.classList.add('pulse-on-hover');
+    }
+    
+    // Функция для показа сообщения об успехе
+    function showSuccessMessage(message = 'Генерация завершена!') {
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success-message';
+        successMessage.innerHTML = `<p>${message}</p><button id="close-message">Закрыть</button>`;
+        document.body.appendChild(successMessage);
+        
+        // Запускаем анимацию
+        setTimeout(() => {
+            successMessage.style.animation = 'fadeIn 0.5s ease forwards';
+        }, 10);
+        
+        // Закрытие сообщения по клику на кнопку
+        const closeButton = document.getElementById('close-message');
+        closeButton.addEventListener('click', () => {
+            successMessage.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                successMessage.remove();
+            }, 300);
+        });
+        
+        // Удаляем сообщение после 5 секунд, если не закрыто вручную
+        setTimeout(() => {
+            if (successMessage.parentNode) {
+                successMessage.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    // Функция для анимации появления элементов
+    function showElements() {
+        const elements = document.querySelectorAll('.wave-visualizer, .controls, .audio-controls');
+        elements.forEach(el => {
+            el.classList.add('visible');
+        });
+    }
+    
+    // Функция для анимации прогресс-бара
+    function animateProgressBar() {
+        const progressBar = document.querySelector('.progress-bar::after');
+        if (progressBar) {
+            progressBar.style.animation = 'none';
+            setTimeout(() => {
+                progressBar.style.animation = 'progress-fill 1.5s ease-in forwards';
+            }, 10);
+        }
+    }
+    
+    // Обновляем функцию simulateLoading для задержки появления элементов
+    function simulateLoading() {
+        showLoader();
+        animateProgressBar();
+        setTimeout(() => {
+            hideLoader();
+            isLoading = false;
+            drawWave();
+            
+            // Задержка перед появлением элементов
+            setTimeout(showElements, 500);
+            
+            // Показать сообщение об успехе
+            showSuccessMessage();
+        }, 1500); // Симуляция загрузки
     }
     
     // Запуск
     init();
+
+    // Экспорт аудио
+    const exportAudioButton = document.getElementById('exportAudio');
+    exportAudioButton.addEventListener('click', () => {
+        const sound = new Howl({
+            src: ['https://assets.mixkit.co/sfx/preview/mixkit-clear-water-dripping-1225.mp3'],
+            onplay: function() {
+                showSuccessMessage('Аудио успешно экспортировано!');
+            }
+        });
+        sound.play();
+        
+        // В реальном приложении можно использовать Web Audio API для записи звука
+        // и сохранения его в формате WAV или MP3.
+        // Для простоты пока отображаем сообщение.
+    });
+    
+    // Экспорт изображения волны
+    const exportImageButton = document.getElementById('exportImage');
+    exportImageButton.addEventListener('click', () => {
+        const visualizer = document.querySelector('.wave-visualizer');
+        const loader = document.getElementById('loader');
+        
+        // Показать лоудер
+        showLoader();
+        
+        html2canvas(visualizer, {
+            scale: 2,
+            logging: false,
+            useCORS: true
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'wave-visualization.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // Скрыть лоудер и показать сообщение об успехе
+            hideLoader();
+            showSuccessMessage('Изображение волны успешно экспортировано!');
+        });
+    });
 });
