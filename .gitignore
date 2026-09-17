@@ -1,0 +1,24 @@
+# Sound Wave Generator
+
+# Build
+/dist/
+*.log
+*.bak
+
+# IDE
+.idea/
+.vscode/
+
+# Environment
+venv/
+node_modules/
+
+# Cache
+shots/
+
+# OS
+.DS_Store
+Thumbs.db
+
+node_modules/
+__pycache__/
