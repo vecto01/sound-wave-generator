@@ -4,6 +4,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Элементы интерфейса
     const waveCanvas = document.getElementById('waveCanvas');
+    const loader = document.getElementById('loader');
     const waveTypeSelect = document.getElementById('waveType');
     const frequencySlider = document.getElementById('frequency');
     const amplitudeSlider = document.getElementById('amplitude');
@@ -23,11 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let amplitude = 0.5;
     let phase = 0;
     let isPlaying = false;
+    let isLoading = true;
     
     // Аудио контекст
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let oscillator = null;
     let gainNode = audioCtx.createGain();
+    
+    // Функция для показа/скрытия лоудера
+    function showLoader() {
+        loader.style.opacity = '1';
+        waveCanvas.style.opacity = '0.3';
+    }
+    
+    function hideLoader() {
+        loader.style.opacity = '0';
+        waveCanvas.style.opacity = '1';
+    }
     
     // Настройка Canvas
     function resizeCanvas() {
@@ -37,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Рисуем волну
+    // Рисуем волну с анимацией
     function drawWave() {
         ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
         ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
@@ -45,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const centerY = waveCanvas.height / 2;
         const samples = 100;
+        
+        // Анимация появления волны
+        const animationProgress = Math.min(1, Date.now() * 0.002);
         
         for (let i = 0; i <= samples; i++) {
             const x = (waveCanvas.width / samples) * i;
@@ -69,7 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
             
-            y += value * (waveCanvas.height * 0.4);
+            // Анимация появления волны
+            y += value * (waveCanvas.height * 0.4 * animationProgress);
             
             if (i === 0) {
                 ctx.moveTo(x, y);
@@ -79,6 +97,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         ctx.stroke();
+        
+        // Обратная связь при изменении параметров
+        if (!isLoading) {
+            frequencySlider.style.transform = 'scale(1.05)';
+            amplitudeSlider.style.transform = 'scale(1.05)';
+            phaseSlider.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                frequencySlider.style.transform = 'scale(1)';
+                amplitudeSlider.style.transform = 'scale(1)';
+                phaseSlider.style.transform = 'scale(1)';
+            }, 100);
+        }
     }
     
     // Обновление параметров
@@ -87,6 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
         amplitudeValue.textContent = amplitude;
         phaseValue.textContent = phase;
         drawWave();
+    }
+    
+    // Управление лоудером
+    function simulateLoading() {
+        showLoader();
+        setTimeout(() => {
+            hideLoader();
+            isLoading = false;
+            drawWave();
+        }, 1500); // Симуляция загрузки
     }
     
     // Управление аудио
@@ -135,6 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedTheme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
         }
+        
+        // Симуляция загрузки
+        simulateLoading();
         
         // Установка обработчиков событий
         waveTypeSelect.addEventListener('change', (e) => {
